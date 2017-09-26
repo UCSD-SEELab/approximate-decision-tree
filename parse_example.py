@@ -108,12 +108,19 @@ print("Reading Data")
 nFeatures, nClasses, train_X, train_y = readChoirDat("mnist_train.choir_dat")
 train_X = train_X[0:100]
 train_y = train_y[0:100]
-#_, _, test_X, test_y = readChoirDat("MNIST/mnist_test.choir_dat")
+_, _, test_X, test_y = readChoirDat("mnist_test.choir_dat")
+test_X = test_X[0:10]
+test_y = test_y[0:10]
 
 c = np.unique(train_y)
 print("Start")
-clf = ApproximateDecisionTreeClassifier(10)
+clf = ApproximateDecisionTreeClassifier(3, 3)
 clf.fit(train_X, train_y)
+
+pred = clf.predict(test_X)
+
+accuracy = metrics.accuracy_score(test_y, pred)
+print("Accuracy: %.2f" % accuracy)
 
 #gini, pivot = find_decision_boundary(np.hstack((train_X, np.reshape(train_y, (-1, 1)))), 0, len(train_X)-1, 125, c)
 
