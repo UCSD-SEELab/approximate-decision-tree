@@ -6,6 +6,7 @@ from sklearn import metrics
 import time
 import random
 import numpy as np
+from decision_tree import ApproximateDecisionTreeClassifier
 
 
 def readChoirDat(filename):
@@ -60,7 +61,7 @@ def calculate_gini(L, pivot_idx, f, c):
     print("Returning gini %.2f", gini)
     return gini, pivot_idx
 
-# quicksort(L, 0, len(L))
+
 def find_decision_boundary(L, start, stop, f, c):
     if stop - start < 2:
         return calculate_gini(L, start, f, c)
@@ -105,13 +106,18 @@ def find_decision_boundary(L, start, stop, f, c):
 
 print("Reading Data")
 nFeatures, nClasses, train_X, train_y = readChoirDat("mnist_train.choir_dat")
+train_X = train_X[0:100]
+train_y = train_y[0:100]
 #_, _, test_X, test_y = readChoirDat("MNIST/mnist_test.choir_dat")
 
 c = np.unique(train_y)
 print("Start")
-gini, pivot = find_decision_boundary(np.hstack((train_X, np.reshape(train_y, (-1, 1)))), 0, len(train_X)-1, 125, c)
+clf = ApproximateDecisionTreeClassifier(10)
+clf.fit(train_X, train_y)
 
-print("gini: %.2f" % gini)
+#gini, pivot = find_decision_boundary(np.hstack((train_X, np.reshape(train_y, (-1, 1)))), 0, len(train_X)-1, 125, c)
+
+#print("gini: %.2f" % gini)
 # start = time.time()
 # clf = ensemble.AdaBoostClassifier(tree.DecisionTreeClassifier(max_depth=1),
 #                                  algorithm="SAMME",
