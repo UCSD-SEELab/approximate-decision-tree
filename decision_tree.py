@@ -133,20 +133,20 @@ class ApproximateDecisionTreeClassifier:
 
     def find_tree(self, data, set_attributes, depth):
         if len(data) < 1:
-            print("zero elements")
+            #print("zero elements")
             return TerminalTreeNode(0)
 
         col_y = len(self.data[0]) - 1
 
         if len(data) == 1:
-            print("Start == stop")
+            #print("Start == stop")
             return TerminalTreeNode(data[0, col_y])
 
         c, counts = np.unique(data[:, col_y], return_counts=True)
 
         if len(c) == 1 or len(set_attributes) == 0:
-            print("length of c %d" % len(c))
-            print("length of attributes %d" % len(set_attributes))
+            #print("length of c %d" % len(c))
+            #print("length of attributes %d" % len(set_attributes))
             return TerminalTreeNode(c[0])
 
         if depth < 1:
@@ -154,21 +154,21 @@ class ApproximateDecisionTreeClassifier:
             return TerminalTreeNode(c[ind])
 
         attribute, pivot = self.find_target_attribute(data, set_attributes, c)
-        print("Choosing attribute: %d" % attribute)
-        print("Choosing pivot: %d" % pivot)
+        #print("Choosing attribute: %d" % attribute)
+        #print("Choosing pivot: %d" % pivot)
 
         # fix the data
         attribute, pivot = self.find_target_attribute(data, [attribute], c)
 
         pivot_value = data[pivot][attribute]
-        print("Choosing pivot value: %.2f" % pivot_value)
+        #print("Choosing pivot value: %.2f" % pivot_value)
         set_attributes.remove(attribute)
-        print("Going left")
+        #print("Going left")
 
         left_partition = data[data[:, attribute] <= pivot_value]
         right_partition = data[data[:, attribute] > pivot_value]
         left = self.find_tree(left_partition, set_attributes[:], depth - 1)
-        print("Going right")
+        #print("Going right")
         right = self.find_tree(right_partition, set_attributes[:], depth - 1)
 
         return DecisionTreeNode(attribute, pivot_value, left, right)
