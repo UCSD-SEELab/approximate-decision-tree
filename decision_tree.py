@@ -178,7 +178,7 @@ class ApproximateDecisionTreeClassifier:
         best_gini = 0
         best_pivot = 0
         for i in set_attributes:
-            gini, pivot = find_decision_boundary(data, 0, len(data)-1, i, c, self.k)
+            gini, pivot = find_decision_boundary(data, 0, len(data) - 1, i, c, self.k)
             if gini >= best_gini:
                 best_gini = gini
                 best_pivot = pivot
@@ -200,3 +200,97 @@ class ApproximateDecisionTreeClassifier:
             tree = tree.evaluate(row)
 
         return tree.index
+
+
+def merge(left, right, f):
+    if not len(left) or not len(right):
+        return left or right
+
+    result = np.empty([0, len(left[0])])
+    i, j = 0, 0
+    while (len(result) < len(left) + len(right)):
+        if left[i][f] < right[j][f]:
+            result = np.vstack((result, left[i]))
+            i += 1
+        else:
+            result = np.vstack((result, right[j]))
+            j += 1
+        if i == len(left):
+            result = np.vstack((result, right[j:]))
+            break
+        if j == len(right):
+            result = np.vstack((result, left[i:]))
+            break
+
+    return result
+
+
+def mergesort(list, f):
+    if len(list) < 2:
+        return list
+
+    middle = len(list) // 2
+    left = mergesort(list[:middle], f)
+    right = mergesort(list[middle:], f)
+
+    return merge(left, right, f)
+
+
+class DeterministicDecisionTreeClassifier(ApproximateDecisionTreeClassifier):
+    def find_target_attribute(self, data, set_attributes, c):
+        best_f = 0
+        best_pivot = 0
+        best_gini = 0
+        for i in set_attributes:
+            data_f = mergesort(data, i)
+            l = np.zeros(10)
+            m = np.zeros(10)
+            for x in range(0, len(c)):
+                m[x] = sum(1 for i in data[0:len(data), data.shape[1] - 1] if i == c[x])
+
+            pm = sum(m)
+            pl = sum(l)
+
+            if (sum(m) + sum(l)) != 0:
+                pm = pm / (sum(m) + sum(l))
+                pl = pl / (sum(m) + sum(l))
+
+            m_div = m
+            l_div = l
+            if sum(m) != 0:
+                m_div = m / sum(m)
+
+            if sum(l) != 0:
+                l_div = l / sum(l)
+
+            gini = pl * sum(i ** 2 for i in l_div) + pm * sum(i ** 2 for i in m_div)
+            pivot = 0
+            for row_idx in range(1, len(data_f)):
+                c_class = int(data_f[row_idx][data.shape[1] - 1])
+                m[c_class] = m[c_class] - 1
+                l[c_class] = l[c_class] + 1
+
+                pm = sum(m)
+                pl = sum(l)
+
+                if (sum(m) + sum(l)) != 0:
+                    pm = pm / (sum(m) + sum(l))
+                    pl = pl / (sum(m) + sum(l))
+
+                if sum(m) != 0:
+                    m_div = m / sum(m)
+
+                if sum(l) != 0:
+                    l_div = l / sum(l)
+
+                gini_inc = pl * sum(i ** 2 for i in l_div) + pm * sum(i ** 2 for i in m_div)
+                if gini_inc > gini:
+                    gini = gini_inc
+                    pivot = row_idx
+
+            if gini >= best_gini:
+                best_gini = gini
+                best_pivot = pivot
+                best_f = i
+
+        return best_f, best_pivot

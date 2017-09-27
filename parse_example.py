@@ -7,6 +7,7 @@ import time
 import random
 import numpy as np
 from decision_tree import ApproximateDecisionTreeClassifier
+from decision_tree import DeterministicDecisionTreeClassifier
 
 
 def readChoirDat(filename):
@@ -62,6 +63,40 @@ def calculate_gini(L, pivot_idx, f, c):
     return gini, pivot_idx
 
 
+def merge(left, right, f):
+    if not len(left) or not len(right):
+        return left or right
+
+    result = np.empty([0, len(left[0])])
+    i, j = 0, 0
+    while (len(result) < len(left) + len(right)):
+        if left[i][f] < right[j][f]:
+            result = np.vstack((result, left[i]))
+            i += 1
+        else:
+            result = np.vstack((result, right[j]))
+            j += 1
+        if i == len(left):
+            result = np.vstack((result, right[j:]))
+            break
+        if j == len(right):
+            result = np.vstack((result, left[i:]))
+            break
+
+    return result
+
+
+def mergesort(list, f):
+    if len(list) < 2:
+        return list
+
+    middle = len(list) // 2
+    left = mergesort(list[:middle], f)
+    right = mergesort(list[middle:], f)
+
+    return merge(left, right, f)
+
+
 def find_decision_boundary(L, start, stop, f, c):
     if stop - start < 2:
         return calculate_gini(L, start, f, c)
@@ -114,17 +149,24 @@ test_y = test_y[0:10]
 
 c = np.unique(train_y)
 print("Start")
-clf = ApproximateDecisionTreeClassifier(3, 3)
+
+#mergesort(train_X, 256)
+start = time.time()
+#clf = ApproximateDecisionTreeClassifier(1, 3)
+clf = DeterministicDecisionTreeClassifier(2, 3)
+# clf = ApproximateDecisionTreeClassifier(3, 3)
+# clf = tree.DecisionTreeClassifier(max_depth=3)
 clf.fit(train_X, train_y)
 
 pred = clf.predict(test_X)
-
+end = time.time()
+print("Time Taken: %d", end - start)
 accuracy = metrics.accuracy_score(test_y, pred)
 print("Accuracy: %.2f" % accuracy)
 
-#gini, pivot = find_decision_boundary(np.hstack((train_X, np.reshape(train_y, (-1, 1)))), 0, len(train_X)-1, 125, c)
+# gini, pivot = find_decision_boundary(np.hstack((train_X, np.reshape(train_y, (-1, 1)))), 0, len(train_X)-1, 125, c)
 
-#print("gini: %.2f" % gini)
+# print("gini: %.2f" % gini)
 # start = time.time()
 # clf = ensemble.AdaBoostClassifier(tree.DecisionTreeClassifier(max_depth=1),
 #                                  algorithm="SAMME",
