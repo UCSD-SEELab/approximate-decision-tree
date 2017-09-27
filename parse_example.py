@@ -141,18 +141,18 @@ def find_decision_boundary(L, start, stop, f, c):
 
 print("Reading Data")
 nFeatures, nClasses, train_X, train_y = readChoirDat("mnist_train.choir_dat")
-train_X = train_X[0:100]
-train_y = train_y[0:100]
+train_X = train_X[0:10000]
+train_y = train_y[0:10000]
 _, _, test_X, test_y = readChoirDat("mnist_test.choir_dat")
-test_X = test_X[0:10]
-test_y = test_y[0:10]
+test_X = test_X[0:1000]
+test_y = test_y[0:1000]
 
 c = np.unique(train_y)
 print("Start")
 
 #mergesort(train_X, 256)
 start = time.time()
-#clf = ApproximateDecisionTreeClassifier(1, 3)
+clf = ApproximateDecisionTreeClassifier(1, 3)
 clf = DeterministicDecisionTreeClassifier(2, 3)
 # clf = ApproximateDecisionTreeClassifier(3, 3)
 # clf = tree.DecisionTreeClassifier(max_depth=3)

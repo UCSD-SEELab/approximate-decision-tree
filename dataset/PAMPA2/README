@@ -1,0 +1,19 @@
+Generated from PAMPA2
+- Use for cross validation
+	- Subject 2~9 are selected for training
+	- Subject 1 is selected for testing
+	- For each dataset, 16*1024 data points are randomly selected, and it doesn't affect the accuracy.
+
+- 27 features (dimension), 5 classes
+	- Features: 27 = |((Mean, STDEV) of x + (Mean, STDEV) of y + (Mean, STDEV) of z + corr(x, y) + corr(y, z) + corr(z, y) == 9) for each of (3 sensors, hand, chest, ankle)|
+		- Extracted by the windowing scheme introduced in the paper:
+		Creating and Benchmarking a New Dataset for Physical Activity Monitoring
+		- More detailed explanation can be found in the author(Attila Reiss)'s thesis:
+		Personalized Mobile Physical Activity Monitoring for Everyday Life 
+		- The author uses 133 features including more frequency-domain data and 4 more heart rates,
+		but if we use these very nice preprocessed features, the accuracy would really high for any algorithms.
+		So, we only consider the basic features in the time-domain for better illustration of ML algorithm comparison.
+
+	- Classes:
+		- 0: lying, 1: sitting/standing, 2: walking, 3: running, 4: cycling
+		- They ared referred as "basic activities" in the author's papers
