@@ -37,10 +37,10 @@ def readChoirDat(filename):
 
 
 print("Reading Data")
-nFeatures, nClasses, train_X, train_y = readChoirDat("dataset/isolet/isolet_train.choir_dat")
+nFeatures, nClasses, train_X, train_y = readChoirDat("dataset/iris/iris_train.choir_dat")
 #train_X = train_X[0:1000]
 #rain_y = train_y[0:1000]
-_, _, test_X, test_y = readChoirDat("dataset/isolet/isolet_test.choir_dat")
+_, _, test_X, test_y = readChoirDat("dataset/iris/iris_test.choir_dat")
 #test_X = test_X[0:100]
 #test_y = test_y[0:100]
 
@@ -49,7 +49,7 @@ c = np.unique(train_y)
 print("Start")
 start = time.time()
 clf = ApproximateDecisionTreeClassifier(1, 3)
-clf.fit(train_X, train_y)
+clf.fit(train_X, train_y, [1]*len(train_X))
 end = time.time()
 print("Time Taken for training approx: %d", end - start)
 
@@ -60,7 +60,7 @@ print("Accuracy approx: %.2f" % accuracy)
 clf = DeterministicDecisionTreeClassifier(2, 3)
 # clf = ApproximateDecisionTreeClassifier(3, 3)
 # clf = tree.DecisionTreeClassifier(max_depth=3)
-clf.fit(train_X, train_y)
+clf.fit(train_X, train_y, [1]*len(train_X))
 end = time.time()
 print("Time Taken for training: %d", end - start)
 

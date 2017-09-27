@@ -10,8 +10,8 @@ def calculate_gini(L, pivot_idx, f, c):
     l = np.zeros(len(c))
     m = np.zeros(len(c))
     for x in range(0, len(c)):
-        l[x] = sum(1 for i in L[0:pivot_idx - 1, L.shape[1] - 1] if i == c[x])
-        m[x] = sum(1 for i in L[pivot_idx:len(L), L.shape[1] - 1] if i == c[x])
+        l[x] = sum(1 for i in L[0:pivot_idx - 1, L.shape[1] - 2] if i == c[x])
+        m[x] = sum(1 for i in L[pivot_idx:len(L), L.shape[1] - 2] if i == c[x])
 
     pm = sum(m)
     pl = sum(l)
@@ -127,8 +127,8 @@ class ApproximateDecisionTreeClassifier:
         self.k = k
         self.depth = depth
 
-    def fit(self, train_X, train_y):
-        self.data = np.hstack((train_X, np.reshape(train_y, (-1, 1))))
+    def fit(self, train_X, train_y, sample_weight):
+        self.data = np.hstack((train_X, np.reshape(train_y, (-1, 1)), np.reshape(sample_weight, (-1,1))))
         self.tree = self.find_tree(self.data, list(range(0, len(train_X[0]) - 1)), self.depth)
 
     def find_tree(self, data, set_attributes, depth):
@@ -136,7 +136,7 @@ class ApproximateDecisionTreeClassifier:
             #print("zero elements")
             return TerminalTreeNode(0)
 
-        col_y = len(self.data[0]) - 1
+        col_y = len(self.data[0]) - 2
 
         if len(data) == 1:
             #print("Start == stop")
@@ -246,7 +246,7 @@ class DeterministicDecisionTreeClassifier(ApproximateDecisionTreeClassifier):
             l = np.zeros(10)
             m = np.zeros(10)
             for x in range(0, len(c)):
-                m[x] = sum(1 for i in data[0:len(data), data.shape[1] - 1] if i == c[x])
+                m[x] = sum(1 for i in data[0:len(data), data.shape[1] - 2] if i == c[x])
 
             pm = sum(m)
             pl = sum(l)
@@ -266,7 +266,7 @@ class DeterministicDecisionTreeClassifier(ApproximateDecisionTreeClassifier):
             gini = pl * sum(i ** 2 for i in l_div) + pm * sum(i ** 2 for i in m_div)
             pivot = 0
             for row_idx in range(1, len(data_f)):
-                c_class = int(data_f[row_idx][data.shape[1] - 1])
+                c_class = int(data_f[row_idx][data.shape[1] - 2])
                 m[c_class] = m[c_class] - 1
                 l[c_class] = l[c_class] + 1
 
