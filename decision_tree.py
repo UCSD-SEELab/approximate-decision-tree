@@ -5,13 +5,13 @@ import random
 def swap(A, i, j):
     A[[i, j], :] = A[[j, i], :]
 
-
 def calculate_gini(L, pivot_idx, f, c):
     l = np.zeros(len(c))
     m = np.zeros(len(c))
+    w = L[:, L.shape[1]-1]
     for x in range(0, len(c)):
-        l[x] = sum(1 for i in L[0:pivot_idx - 1, L.shape[1] - 2] if i == c[x])
-        m[x] = sum(1 for i in L[pivot_idx:len(L), L.shape[1] - 2] if i == c[x])
+        l[x] = sum(w[i] for i in range(0, pivot_idx-1) if L[i, L.shape[1]-2] == c[x])
+        m[x] = sum(w[i] for i in range(pivot_idx, len(L)) if L[i, L.shape[1]-2] == c[x])
 
     pm = sum(m)
     pl = sum(l)
@@ -117,9 +117,10 @@ class DecisionTreeNode:
 
 
 class TerminalTreeNode:
-    def __init__(self, index):
+    def __init__(self, index, prob):
         self.index = index
         self.isTerminal = True
+        self.prob = prob
 
 
 class ApproximateDecisionTreeClassifier:
@@ -127,31 +128,48 @@ class ApproximateDecisionTreeClassifier:
         self.k = k
         self.depth = depth
 
+    def get_params(self, deep=True):
+        # suppose this estimator has parameters "alpha" and "recursive"
+        return {"k": self.k, "depth": self.depth}
+
+    def set_params(self, **parameters):
+        for parameter, value in parameters.items():
+            self.setattr(parameter, value)
+        return self
+
+
     def fit(self, train_X, train_y, sample_weight):
         self.data = np.hstack((train_X, np.reshape(train_y, (-1, 1)), np.reshape(sample_weight, (-1,1))))
+        self.n_classes = len(np.unique(self.data[:, len(self.data[0]) - 2]))
         self.tree = self.find_tree(self.data, list(range(0, len(train_X[0]) - 1)), self.depth)
 
+
     def find_tree(self, data, set_attributes, depth):
+        prob = [0] * self.n_classes
         if len(data) < 1:
             #print("zero elements")
-            return TerminalTreeNode(0)
+            return TerminalTreeNode(0, prob)
 
         col_y = len(self.data[0]) - 2
 
         if len(data) == 1:
             #print("Start == stop")
-            return TerminalTreeNode(data[0, col_y])
+            return TerminalTreeNode(data[0, col_y], prob)
 
         c, counts = np.unique(data[:, col_y], return_counts=True)
+
+
+        for i in range(0, len(c)):
+            prob[int(c[i])] = counts[i]/sum(counts)
 
         if len(c) == 1 or len(set_attributes) == 0:
             #print("length of c %d" % len(c))
             #print("length of attributes %d" % len(set_attributes))
-            return TerminalTreeNode(c[0])
+            return TerminalTreeNode(c[0], prob)
 
         if depth < 1:
             ind = np.argmax(counts)
-            return TerminalTreeNode(c[ind])
+            return TerminalTreeNode(c[ind], prob)
 
         attribute, pivot = self.find_target_attribute(data, set_attributes, c)
         #print("Choosing attribute: %d" % attribute)
@@ -173,6 +191,14 @@ class ApproximateDecisionTreeClassifier:
 
         return DecisionTreeNode(attribute, pivot_value, left, right)
 
+    def predict_proba(self, test_X):
+        pred = np.zeros((0, self.n_classes))
+
+        for i in range(0, len(test_X)):
+            pred = np.vstack((pred, np.array(self.evaluate_prob(test_X[i])).reshape(1,-1)))
+
+        return pred
+
     def find_target_attribute(self, data, set_attributes, c):
         best_f = 0
         best_gini = 0
@@ -192,6 +218,15 @@ class ApproximateDecisionTreeClassifier:
             pred[i] = self.evaluate(test_X[i])
 
         return pred
+
+
+    def evaluate_prob(self, row):
+        tree = self.tree
+
+        while not tree.isTerminal:
+            tree = tree.evaluate(row)
+
+        return tree.prob
 
     def evaluate(self, row):
         tree = self.tree
