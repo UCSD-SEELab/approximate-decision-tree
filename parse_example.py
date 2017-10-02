@@ -25,7 +25,7 @@ def run_adaboost(train_X, train_y, test_X, test_y):
     num = 3
     clfs = []
     for loop_idx in range(0, num):
-        clfs.append(ApproximateDecisionTreeClassifier(3, 2))
+        clfs.append(DeterministicDecisionTreeClassifier(3, 1))
 
     weights = [1] * len(train_X)
     t = sum(weights)
@@ -147,13 +147,14 @@ def readChoirDat(filename):
     return nFeatures, nClasses, X, y
 
 
-list_ids = ["n02100236/", "n02124075/", "n00442437/"]
+list_ids = ["n02100236/", "n00442437/"]
 # "n11596108/"
-N = 100
+# "n02124075/"
+N = 500
 n_classes = len(list_ids)
 test_N = 100
 
-attribute_size = 128
+attribute_size = 2592
 train_X = np.zeros((N * n_classes, attribute_size))
 train_y = np.zeros((N * n_classes))
 test_X = np.zeros((test_N * n_classes, attribute_size))
@@ -161,7 +162,7 @@ test_y = np.zeros((test_N * n_classes))
 image_size = 64
 total = 0
 test_total = 0
-cell_size = 16
+cell_size = 32
 for num in range(0, n_classes):
     folderId = list_ids[num]
     images = [f for f in listdir(folderId) if isfile(join(folderId, f))]
@@ -169,8 +170,7 @@ for num in range(0, n_classes):
         fileName = images[i - 1]
         arr = scipy.misc.imread(folderId + fileName, flatten=True)
         arr = scipy.misc.imresize(arr, (image_size, image_size))
-        arr = hog(arr, orientations=8, pixels_per_cell=(cell_size, cell_size),
-                  cells_per_block=(1, 1))
+        arr = hog(arr, orientations=8)
         # pixels_per_cell = (16, 16),cells_per_block = (1, 1)
         train_X[total + i - 1] = np.array(arr).reshape((1, -1))
         train_y[total + i - 1] = num
@@ -183,8 +183,7 @@ for num in range(0, n_classes):
         fileName = images[N + i - 1]
         arr = scipy.misc.imread(folderId + fileName, flatten=True)
         arr = scipy.misc.imresize(arr, (image_size, image_size))
-        arr = hog(arr, orientations=8, pixels_per_cell=(cell_size, cell_size),
-                  cells_per_block=(1, 1))
+        arr = hog(arr, orientations=8)
         test_X[test_total + i - 1] = np.array(arr).reshape((1, -1))
         test_y[test_total + i - 1] = 0
 
@@ -207,9 +206,18 @@ print("Reading Data")
 
 
 print("Start")
-clf = ApproximateDecisionTreeClassifier(3, 3)
-run_adaboost(train_X, train_y, test_X, test_y)
+#clf = ApproximateDecisionTreeClassifier(3, 3)
+#run_adaboost(train_X, train_y, test_X, test_y)
+clf = ensemble.AdaBoostClassifier(tree.DecisionTreeClassifier(max_depth=1),
+                                  algorithm="SAMME",
+                                  n_estimators=200)
+clf = clf.fit(train_X, train_y)
+y_pred = clf.predict(test_X)
 
+accuracy = metrics.accuracy_score(test_y, y_pred)
+# end = time.time()
+# print("Time Taken: %d", end - start)
+print("Accuracy: %.2f" % accuracy)
 # clf = DeterministicDecisionTreeClassifier(2, 3)
 # clf = ApproximateDecisionTreeClassifier(3, 3)
 # clf = tree.DecisionTreeClassifier(max_depth=3)
